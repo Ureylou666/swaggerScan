@@ -55,11 +55,3 @@ The generated Excel report contains the following columns:
 ## Contributing
 
 Feel free to fork this repository and submit pull requests to add more features or support additional methods.
-
-## License
-
-[MIT License](LICENSE.md)
-
----
-
-Remember to replace placeholder texts with actual information relevant to your project, such as the correct path to the Python script if it's not directly in the root directory or any additional steps required for setup.
