@@ -1,4 +1,7 @@
 import json
+import os
+from urllib.parse import urljoin, urlparse
+
 import requests
 import pandas as pd
 import random
@@ -116,8 +119,45 @@ def main(swagger_path, host):
     df.to_excel(filename, index=False)
     print(f"Results saved to {filename}")
 
+def load_paths():
+    with open('swagger.txt', 'r') as file:
+        return [line.strip() for line in file if line.strip()]
+
+def save_swagger_document(url, data):
+    parsed_url = urlparse(url)
+    filename = os.path.basename(parsed_url.path)
+    if not filename.endswith('.json'):
+        filename += '.json'
+    with open(filename, 'w') as f:
+        json.dump(data, f)
+    print(f"Saved {filename} from {url}")
+
+def check_swagger_documents(base_url, paths):
+    for path in paths:
+        full_url = urljoin(base_url, path)
+        try:
+            response = requests.get(full_url, timeout=10)
+            response.raise_for_status()  # 确保请求成功
+            data = response.json()  # 尝试解析JSON数据
+            if "swagger" in data or "openapi" in data:  # 检查是否是Swagger文档
+                save_swagger_document(full_url, data)
+                print(f"Swagger document found and saved from {full_url}")
+                break  # 找到后不再继续检查其他路径
+        except requests.exceptions.RequestException as e:
+            print(f"Request failed for {full_url}: {e}")
+        except json.JSONDecodeError:
+            print(f"Failed to decode JSON from {full_url}")
+
+def swagger_scan():
+    paths = load_paths()
+    with open('url.txt', 'r') as file:
+        for base_url in file:
+            base_url = base_url.strip()  # 去除可能的空白字符
+            if base_url:
+                check_swagger_documents(base_url, paths)
 
 if __name__ == "__main__":
-    swagger_path = input("Enter the path to your local swagger.json file: ")
-    host = input("Enter the host address for API calls: ")
-    main(swagger_path, host)
+    # swagger_path = input("Enter the path to your local swagger.json file: ")
+    # host = input("Enter the host address for API calls: ")
+    # main(swagger_path, host)
+    swagger_scan()
